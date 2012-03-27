@@ -10,6 +10,10 @@
 
 (def conn (atom nil))
 
+(defn send-all [m]
+  (let [j (json/generate-string m)]
+    (doseq [c @conn]
+      (.send c j))))
 
 (defn  on-open [c]
   (println c)
@@ -23,10 +27,7 @@
              :username (.data c "username")}))
 
 
-(defn send-all [m]
-  (let [j (json/generate-string m)]
-    (doseq [c @conn]
-      (.send c j))))
+
 
 
 ;; TODO: catch json exception and send a response intelligently
