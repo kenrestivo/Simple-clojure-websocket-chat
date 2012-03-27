@@ -5,8 +5,6 @@
 
 
 
-(def res (atom nil))
-
 
 (def conn (atom #{}))
 
