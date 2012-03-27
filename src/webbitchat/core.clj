@@ -51,7 +51,6 @@
         (onClose [c] (on-close c))
         (onMessage [c j] (on-message c j))))
 
-(.start csrv)
 
 
 
@@ -61,3 +60,5 @@
 ;; show all the usernames
 ; (map #(.data % "username") @conn)
 
+(defn -main [& m]
+  (.start csrv))
