@@ -20,12 +20,12 @@
 
 (defn  on-open [c]
   (swap! conn #(conj % c))
-  (println (str "joining: " (ipaddr c) )))
+  (println (str (ipaddr c) " joining")))
 
   
 
 (defn on-close [c]
-  (println (str "leaving: " (ipaddr c) ))
+  (println (str  (ipaddr c) " leaving"))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
