@@ -49,10 +49,16 @@
   (on-close c)
   (.close c))
 
+(defn userlist [m c]
+  (.send c (json/generate-string
+            {:userlist (usernames)})))
+
+
 (defn dispatch [m c action]
   (cond
    (contains? #{"SAY" "SPRAY"} action) say-or-spray
    (= action "LOGIN") login
+   (= action "USERLIST") userlist
    (= action "LOGOUT") close))
      
 
