@@ -1,0 +1,63 @@
+(ns webbitchat.core
+  (:require [clj-json.core :as json]
+            [clojure.string :as s])
+  (:import [org.webbitserver WebServer WebServers WebSocketHandler]
+           [org.webbitserver.handler StaticFileHandler]))
+
+
+(def res (atom nil))
+
+
+(def conn (atom nil))
+
+
+(defn  on-open [c]
+  (println c)
+  (swap! conn #(conj % c)))
+  
+
+(defn on-close [c]
+  (println c)
+  (swap! conn #(disj % c))
+  (send-all {:action "LEAVE"
+             :username (.data c "username")}))
+
+
+(defn send-all [m]
+  (let [j (json/generate-string m)]
+    (doseq [c @conn]
+      (.send c j))))
+
+
+;; TODO: catch json exception and send a response intelligently
+(defn on-message [c j]
+  (reset! res j) ;; debug only
+  (println (str "i gots " j))
+  (let [m (json/parse-string j)
+        action (m "action")]
+    (if (contains? #{"SAY" "SPRAY"} action)
+      (send-all (assoc m :username (.data c "username"))))
+    (if (= action "LOGIN" )
+      (.data c "username" (m "loginUsername")))))
+
+
+
+
+(def csrv (WebServers/createWebServer 9876))
+
+(.add csrv "/chatsocket"
+      (proxy [WebSocketHandler] []
+        (onOpen [c] (on-open c))
+        (onClose [c] (on-close c))
+        (onMessage [c j] (on-message c j))))
+
+(.start csrv)
+
+
+
+;;;;;;;;;;;;;
+
+
+;; show all the usernames
+; (map #(.data % "username") @conn)
+
