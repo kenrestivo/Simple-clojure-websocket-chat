@@ -8,7 +8,7 @@
 (def res (atom nil))
 
 
-(def conn (atom nil))
+(def conn (atom #{}))
 
 (defn send-all [m]
   (let [j (json/generate-string m)]
@@ -22,10 +22,17 @@
 
 (defn on-close [c]
   (println c)
-  (swap! conn #(disj % c))
   (send-all {:action "LEAVE"
-             :username (.data c "username")}))
+             :username (.data c "username")})
+  (swap! conn #(disj % c)))
 
+
+
+
+
+(defn usernames []
+  "show all the usernames"
+  (map #(.data % "username") @conn))
 
 
 
@@ -42,7 +49,7 @@
       (do
         (.data c "username" (m "loginUsername"))
         (send-all {:action "JOIN"
-                 :username (.data c "username")})))))
+                   :username (.data c "username")})))))
 
 
 
@@ -50,10 +57,10 @@
 (def csrv (WebServers/createWebServer 9876))
 
 (.add csrv "/chatsocket"
-(proxy [WebSocketHandler] []
-  (onOpen [c] (on-open c))
-  (onClose [c] (on-close c))
-  (onMessage [c j] (on-message c j))))
+      (proxy [WebSocketHandler] []
+        (onOpen [c] (on-open c))
+        (onClose [c] (on-close c))
+        (onMessage [c j] (on-message c j))))
 
 
 
@@ -61,8 +68,5 @@
 ;;;;;;;;;;;;;
 
 
-;; show all the usernames
-                                        ; (map #(.data % "username") @conn)
-
 (defn -main [& m]
-(.start csrv))
+  (.start csrv))
