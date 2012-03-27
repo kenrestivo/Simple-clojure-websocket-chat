@@ -36,20 +36,29 @@
 
 
 
+(defn say-or-spray [ m c]
+  (send-all (assoc m :username (.data c "username"))))
+
+(defn login [m c]
+  (.data c "username" (m "loginUsername"))
+  (send-all {:action "JOIN"
+             :username (.data c "username")}))
+
+(defn dispatch [m c action]
+  (cond
+   (contains? #{"SAY" "SPRAY"} action) say-or-spray
+   (= action "LOGIN") login))
+     
+
 
 ;; TODO: catch json exception and send a response intelligently
 (defn on-message [c j]
   (reset! res j) ;; debug only
   (println (str "i gots " j))
   (let [m (json/parse-string j)
-        action (m "action")]
-    (if (contains? #{"SAY" "SPRAY"} action)
-      (send-all (assoc m :username (.data c "username"))))
-    (if (= action "LOGIN" )
-      (do
-        (.data c "username" (m "loginUsername"))
-        (send-all {:action "JOIN"
-                   :username (.data c "username")})))))
+        action (m "action")
+        f (dispatch m c action)]
+    (f m c)))
 
 
 
