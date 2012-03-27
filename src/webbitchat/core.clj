@@ -13,13 +13,19 @@
     (doseq [c @conn]
       (.send c j))))
 
+
+(defn ipaddr [c]
+  (let [htr (.httpRequest c)]
+    (-> htr .remoteAddress .getAddress .getHostAddress)))
+
 (defn  on-open [c]
-  (println c)
-  (swap! conn #(conj % c)))
+  (swap! conn #(conj % c))
+  (println (str "joining: " (ipaddr c) )))
+
   
 
 (defn on-close [c]
-  (println c)
+  (println (str "leaving: " (ipaddr c) ))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
@@ -42,10 +48,6 @@
   (send-all {:action "JOIN"
              :username (.data c "username")}))
 
-(defn close [m c]
-  "XXX THIS DOES NOT WORK, IT LEAVES ZOMBIES!"
-  (on-close c)
-  (.close c))
 
 (defn userlist [m c]
   (.send c (json/generate-string
@@ -56,8 +58,8 @@
   (cond
    (contains? #{"SAY" "SPRAY"} action) say-or-spray
    (= action "LOGIN") login
-   (= action "USERLIST") userlist
-   (= action "LOGOUT") close))
+   (= action "USERLIST") userlist))
+
      
 
 
