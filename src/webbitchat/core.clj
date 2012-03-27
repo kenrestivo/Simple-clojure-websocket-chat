@@ -1,6 +1,6 @@
 (ns webbitchat.core
-  (:require [clj-json.core :as json]
-            [clojure.string :as s])
+  (:use [cheshire.core])
+  (:require [clojure.string :as s])
   (:import [org.webbitserver WebServer WebServers WebSocketHandler]))
 
 
