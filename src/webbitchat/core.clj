@@ -39,7 +39,10 @@
     (if (contains? #{"SAY" "SPRAY"} action)
       (send-all (assoc m :username (.data c "username"))))
     (if (= action "LOGIN" )
-      (.data c "username" (m "loginUsername")))))
+      (do
+        (.data c "username" (m "loginUsername"))
+        (send-all {:action "JOIN"
+                 :username (.data c "username")})))))
 
 
 
@@ -47,10 +50,10 @@
 (def csrv (WebServers/createWebServer 9876))
 
 (.add csrv "/chatsocket"
-      (proxy [WebSocketHandler] []
-        (onOpen [c] (on-open c))
-        (onClose [c] (on-close c))
-        (onMessage [c j] (on-message c j))))
+(proxy [WebSocketHandler] []
+  (onOpen [c] (on-open c))
+  (onClose [c] (on-close c))
+  (onMessage [c j] (on-message c j))))
 
 
 
@@ -59,7 +62,7 @@
 
 
 ;; show all the usernames
-; (map #(.data % "username") @conn)
+                                        ; (map #(.data % "username") @conn)
 
 (defn -main [& m]
-  (.start csrv))
+(.start csrv))
