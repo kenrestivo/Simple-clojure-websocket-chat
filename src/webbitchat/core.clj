@@ -65,7 +65,7 @@
 
 ;; TODO: catch json exception and send a response intelligently
 (defn on-message [c j]
-  (reset! res j) ;; debug only
+  ;;(reset! res j) ;; debug only
   (println (str "i gots " j))
   (let [m (json/parse-string j)
         action (m "action")
@@ -85,7 +85,7 @@
 
 
 (comment
-  "cool stuff!"
+  "useful stuff"
   (let [htr (.httpRequest (first @conn))]
     (-> htr .remoteAddress .getAddress .getHostAddress)))
   
