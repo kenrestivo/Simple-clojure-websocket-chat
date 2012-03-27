@@ -1,8 +1,8 @@
 (ns webbitchat.core
   (:require [clj-json.core :as json]
             [clojure.string :as s])
-  (:import [org.webbitserver WebServer WebServers WebSocketHandler]
-           [org.webbitserver.handler StaticFileHandler]))
+  (:import [org.webbitserver WebServer WebServers WebSocketHandler]))
+
 
 
 (def res (atom nil))
