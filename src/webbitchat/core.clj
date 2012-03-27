@@ -15,6 +15,7 @@
 
 
 (defn ipaddr [c]
+  " because java is so miserable"
   (let [htr (.httpRequest c)]
     (-> htr .remoteAddress .getAddress .getHostAddress)))
 
