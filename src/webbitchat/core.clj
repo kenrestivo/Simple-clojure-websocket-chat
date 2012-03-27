@@ -63,7 +63,11 @@
         (onMessage [c j] (on-message c j))))
 
 
-
+(comment
+  "cool stuff!"
+  (let [htr (.httpRequest (first @conn))]
+    (-> htr .remoteAddress .getAddress .getHostAddress)))
+  
 
 ;;;;;;;;;;;;;
 
