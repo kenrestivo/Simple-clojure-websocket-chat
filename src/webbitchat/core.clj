@@ -44,10 +44,16 @@
   (send-all {:action "JOIN"
              :username (.data c "username")}))
 
+(defn close [m c]
+  "XXX THIS DOES NOT WORK, IT LEAVES ZOMBIES!"
+  (on-close c)
+  (.close c))
+
 (defn dispatch [m c action]
   (cond
    (contains? #{"SAY" "SPRAY"} action) say-or-spray
-   (= action "LOGIN") login))
+   (= action "LOGIN") login
+   (= action "LOGOUT") close))
      
 
 
