@@ -1,6 +1,6 @@
 (ns webbitchat.core
-  (:require [clj-json.core :as json]
-            [clojure.string :as s])
+  (:use [cheshire.core])
+  (:require [clojure.string :as s])
   (:import [org.webbitserver WebServer WebServers WebSocketHandler]))
 
 
@@ -9,7 +9,7 @@
 (def conn (atom #{}))
 
 (defn send-all [m]
-  (let [j (json/generate-string m)]
+  (let [j (encode m)]
     (doseq [c @conn]
       (.send c j))))
 
@@ -51,7 +51,7 @@
 
 
 (defn userlist [m c]
-  (.send c (json/generate-string
+  (.send c (encode
             {:userlist (usernames)})))
 
 
@@ -68,7 +68,7 @@
 (defn on-message [c j]
   ;;(reset! res j) ;; debug only
   (println (str "i gots " j))
-  (let [m (json/parse-string j)
+  (let [m (decode j)
         action (m "action")
         f (dispatch m c action)]
     (f m c)))
