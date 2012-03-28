@@ -26,12 +26,13 @@
 
 (defn  on-open [c]
   (swap! conn #(conj % c))
-  (logprint (str (ipaddr c) " joining")))
+  (.data c "ip" (ipaddr c))
+  (logprint (str (.data  c "ip") " joining")))
 
   
 
 (defn on-close [c]
-  (logprint (str  (ipaddr c) " leaving"))
+  (logprint (str  (.data c "ip") " leaving"))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
@@ -70,7 +71,7 @@
 ;; TODO: catch json exception and send a response intelligently
 (defn on-message [c j]
   ;;(reset! res j) ;; debug only
-  (logprint (str "i gots " j))
+  (logprint (format "%s %s %s" (.data c "ip") (.data c "username") j))
   (let [m (decode j)
         action (m "action")
         f (dispatch m c action)]
