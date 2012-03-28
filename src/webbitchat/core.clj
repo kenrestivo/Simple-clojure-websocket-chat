@@ -4,7 +4,7 @@
   (:import [org.webbitserver WebServer WebServers WebSocketHandler]))
 
 
-
+(def log (atom nil))
 
 (def conn (atom #{}))
 
@@ -14,6 +14,11 @@
       (.send c j))))
 
 
+(defn logprint [x]
+  (binding [*out* @log]
+    (println x)))
+
+
 (defn ipaddr [c]
   " because java is so miserable"
   (let [htr (.httpRequest c)]
@@ -21,17 +26,15 @@
 
 (defn  on-open [c]
   (swap! conn #(conj % c))
-  (println (str (ipaddr c) " joining")))
+  (logprint (str (ipaddr c) " joining")))
 
   
 
 (defn on-close [c]
-  (println (str  (ipaddr c) " leaving"))
+  (logprint (str  (ipaddr c) " leaving"))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
-
-
 
 
 
@@ -67,7 +70,7 @@
 ;; TODO: catch json exception and send a response intelligently
 (defn on-message [c j]
   ;;(reset! res j) ;; debug only
-  (println (str "i gots " j))
+  (logprint (str "i gots " j))
   (let [m (decode j)
         action (m "action")
         f (dispatch m c action)]
@@ -85,14 +88,13 @@
         (onMessage [c j] (on-message c j))))
 
 
-(comment
-  "useful stuff"
-  (let [htr (.httpRequest (first @conn))]
-    (-> htr .remoteAddress .getAddress .getHostAddress)))
-  
+
+(defn logsetup [x]
+  (reset! log (clojure.java.io/writer x)))
 
 ;;;;;;;;;;;;;
 
 
 (defn -main [& m]
+  (logsetup "webbit.log")
   (.start csrv))
