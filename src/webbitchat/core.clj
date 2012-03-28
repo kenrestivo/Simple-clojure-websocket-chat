@@ -32,7 +32,7 @@
   
 
 (defn on-close [c]
-  (logprint (str  (.data c "ip") " leaving"))
+  (logprint (format "%s %s leaving"  (.data c "ip") (.data c "username")))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
