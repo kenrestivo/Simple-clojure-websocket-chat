@@ -50,13 +50,15 @@
 
 (defn login [m c]
   (.data c "username" (m "loginUsername"))
+  (userlist m c)
   (send-all {:action "JOIN"
              :username (.data c "username")}))
 
 
 (defn userlist [m c]
   (.send c (encode
-            {:userlist (usernames)})))
+            {:action "USERLIST"
+             :userlist (usernames)})))
 
 
 (defn dispatch [m c action]
