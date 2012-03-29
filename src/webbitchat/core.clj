@@ -38,18 +38,25 @@
   (swap! conn #(disj % c)))
 
 
-
+;;; todo: could wrap this in a transaction maybe
 (defn usernames []
   "show all the usernames"
-  (map #(.data % "username") @conn))
+  (set (map #(.data % "username") @conn)))
 
-
+(defn gen-unique [coll name & num]
+  "generates a name unique to the collection supplied"
+  (let [num-unsequed  (if (seq? num) (first num) num)
+        num-seeded (or num 0)
+        name-combined (str name num-unsequed)]
+    (if (contains? coll name-combined)
+      (recur coll name (inc num-seeded))
+      name-combined)))
 
 (defn say-or-spray [ m c]
   (send-all (assoc m :username (.data c "username"))))
 
 (defn login [m c]
-  (.data c "username" (m "loginUsername"))
+  (.data c "username" (gen-unique (usernames) (m "loginUsername")))
   (userlist m c)
   (send-all {:action "JOIN"
              :username (.data c "username")}))
