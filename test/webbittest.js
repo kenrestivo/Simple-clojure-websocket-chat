@@ -3,11 +3,11 @@ if(typeof WebSocket === 'undefined'){
     WebSocket = MozWebSocket;
 }
 
-ws = new WebSocket('ws://localhost:8072/chatsocket');
+ws = new WebSocket('ws://localhost:9876/chatsocket');
 
 function send(outgoing) { ws.send(JSON.stringify(outgoing));}
 
-// replace these console.log handlers with something more useful
+// console.log only for demo purposes
 ws.onopen = console.log;  
 ws.onclose = console.log; 
 ws.onerror = console.log; 
