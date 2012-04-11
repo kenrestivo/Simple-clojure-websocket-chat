@@ -4,4 +4,4 @@
                  [org.webbitserver/webbit "0.4.6"]
                  [cheshire "3.0.0"]]
   :repl-port 7898
-  :main webbitchat.core )
+  :main webbitchat.core)

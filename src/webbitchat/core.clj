@@ -1,7 +1,8 @@
 (ns webbitchat.core
   (:use [cheshire.core])
   (:require [clojure.string :as s])
-  (:import [org.webbitserver WebServer WebServers WebSocketHandler]))
+  (:import [org.webbitserver WebServer WebServers WebSocketHandler])
+  (:gen-class :main true))
 
 
 (def log (atom nil))
@@ -43,6 +44,7 @@
   "get all the usernames as a set"
   (set (map #(.data % "username") @conn)))
 
+
 (defn gen-unique [coll name & num]
   "generates a name unique to the collection supplied"
   (let [num-unsequed  (if (seq? num) (first num) num)
@@ -52,20 +54,24 @@
       (recur coll name (inc num-seeded))
       name-combined)))
 
+
 (defn say-or-spray [ m c]
   (send-all (assoc m :username (.data c "username"))))
 
-(defn login [m c]
-  (.data c "username" (gen-unique (usernames) (m "loginUsername")))
-  (userlist m c)
-  (send-all {:action "JOIN"
-             :username (.data c "username")}))
+
 
 
 (defn userlist [m c]
   (.send c (encode
             {:action "USERLIST"
              :userlist (usernames)})))
+
+
+(defn login [m c]
+  (.data c "username" (gen-unique (usernames) (m "loginUsername")))
+  (userlist m c)
+  (send-all {:action "JOIN"
+             :username (.data c "username")}))
 
 
 (defn dispatch [m c action]
