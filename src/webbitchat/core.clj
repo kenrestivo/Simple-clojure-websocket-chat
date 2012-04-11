@@ -40,7 +40,7 @@
 
 ;;; todo: could wrap this in a transaction maybe
 (defn usernames []
-  "show all the usernames"
+  "get all the usernames as a set"
   (set (map #(.data % "username") @conn)))
 
 (defn gen-unique [coll name & num]
