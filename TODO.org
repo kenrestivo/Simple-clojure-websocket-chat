@@ -1,6 +1,5 @@
 TODO for the clojure webbit chat server
 
-* TODO replace my goofy log functions with log4j (tools.logging looks nice)
 * TODO play with transactions/refs for things like the username login stuff
 * TODO catch json errors in on-message, and report them
 * TODO try an aleph version?

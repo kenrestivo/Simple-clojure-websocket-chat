@@ -1,11 +1,11 @@
 (ns webbitchat.core
-  (:use [cheshire.core])
+  (:use [cheshire.core]
+        [clojure.tools.logging :only (info error)])
   (:require [clojure.string :as s])
   (:import [org.webbitserver WebServer WebServers WebSocketHandler])
   (:gen-class :main true))
 
 
-(def log (atom nil))
 
 (def conn (atom #{}))
 
@@ -15,10 +15,6 @@
       (.send c j))))
 
 
-(defn logprint [x]
-  (binding [*out* @log]
-    (println x)))
-
 
 (defn ipaddr [c]
   "Because dealing with java is like dealing with the Italian bureaucracy"
@@ -27,12 +23,12 @@
 (defn  on-open [c]
   (swap! conn #(conj % c))
   (.data c "ip" (ipaddr c))
-  (logprint (str (.data  c "ip") " joining")))
+  (info (str (.data  c "ip") " joining")))
 
   
 
 (defn on-close [c]
-  (logprint (format "%s %s leaving"  (.data c "ip") (.data c "username")))
+  (info (format "%s %s leaving"  (.data c "ip") (.data c "username")))
   (send-all {:action "LEAVE"
              :username (.data c "username")})
   (swap! conn #(disj % c)))
@@ -85,7 +81,7 @@
 ;; TODO: catch json exception and send a response intelligently
 (defn on-message [c j]
   ;;(reset! res j) ;; debug only
-  (logprint (format "%s %s %s" (.data c "ip") (.data c "username") j))
+  (info (format "%s %s %s" (.data c "ip") (.data c "username") j))
   (let [m (decode j)
         action (m "action")
         f (dispatch m c action)]
@@ -104,12 +100,9 @@
 
 
 
-(defn logsetup [x]
-  (reset! log (clojure.java.io/writer x)))
 
 ;;;;;;;;;;;;;
 
 
 (defn -main [& m]
-  (logsetup "webbit.log")
   (.start csrv))
