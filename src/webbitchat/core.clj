@@ -21,9 +21,8 @@
 
 
 (defn ipaddr [c]
-  " because java is so miserable"
-  (let [htr (.httpRequest c)]
-    (-> htr .remoteAddress .getAddress .getHostAddress)))
+  "Because dealing with java is like dealing with the Italian bureaucracy"
+  (-> (.httpRequest c)  .remoteAddress .getAddress .getHostAddress))
 
 (defn  on-open [c]
   (swap! conn #(conj % c))
