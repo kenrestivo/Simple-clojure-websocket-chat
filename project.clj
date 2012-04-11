@@ -3,6 +3,7 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.webbitserver/webbit "0.4.6"]
                  [cheshire "3.0.0"]
-                 [org.clojure/tools.logging "0.2.3"]]
+                 [org.clojure/tools.logging "0.2.3"]
+                 [log4j "1.2.16"]]
   :repl-port 7898
   :main webbitchat.core)
