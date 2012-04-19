@@ -66,7 +66,10 @@
 (defn constrain-username
   "because some people think it's cute to come up with goofy names"
   [name]
-  (string/trim name))
+  (let [n (string/trim name)
+        l (.length n)]
+    (.substring n 0 (min l 50))))
+
 
 
 (defn login [m c]
