@@ -1,7 +1,7 @@
 (ns webbitchat.core
   (:use [cheshire.core]
         [clojure.tools.logging :only (info error)])
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as string])
   (:import [org.webbitserver WebServer WebServers WebSocketHandler])
   (:gen-class :main true))
 
@@ -35,8 +35,9 @@
 
 
 ;;; todo: could wrap this in a transaction maybe
-(defn usernames []
+(defn usernames
   "get all the usernames as a set"
+  []
   (set (map #(.data % "username") @conn)))
 
 
@@ -62,8 +63,15 @@
              :userlist (usernames)})))
 
 
+(defn constrain-username
+  "because some people think it's cute to come up with goofy names"
+  [name]
+  (string/trim name))
+
+
 (defn login [m c]
-  (.data c "username" (gen-unique (usernames) (m "loginUsername")))
+  (.data c "username"
+         (gen-unique (usernames) (constrain-username (m "loginUsername"))))
   (userlist m c)
   (send-all {:action "JOIN"
              :username (.data c "username")}))
