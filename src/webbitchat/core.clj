@@ -1,47 +1,49 @@
 (ns webbitchat.core
-  (:use [cheshire.core]
-        [clojure.tools.logging :only (info error)])
-  (:require [clojure.string :as string])
-  (:import [org.webbitserver WebServer WebServers WebSocketHandler])
+  (:use [clojure.tools.logging :only (info error)])
+  (:require [clojure.string :as string]
+            [environ.core :as env]
+            [webbitchat.websocketwrap :as wsr])
+  (:import [org.webbitserver WebServer WebServers WebSocketHandler WebSocketConnection]
+           )
   (:gen-class :main true))
 
 
+;; TODO: extend-protocol c to the assoc protocol
 
-(def conn (atom #{}))
+
+(defonce conn-table (atom {}))
+
+(defonce csrv (atom nil))
 
 (defn send-all [m]
-  (let [j (encode m)]
-    (doseq [c @conn]
-      (.send c j))))
+  (doseq [c (keys @conn-table)]
+    (wsr/sendm c m)))
 
 
 
-(defn ipaddr [c]
-  "Because dealing with java is like dealing with the Italian bureaucracy"
-  (-> (.httpRequest c)  .remoteAddress .getAddress .getHostAddress))
+(defn  on-open [ c]
+  (let [ip  (wsr/ipaddr c)]
+    (swap! conn-table #(assoc % c {:ip ip}))
+    (info (str ip " connecting " (.data c)))))
 
-(defn  on-open [c]
-  (swap! conn #(conj % c))
-  (.data c "ip" (ipaddr c))
-  (info (str (.data  c "ip") " joining")))
 
-  
 
-(defn on-close [c]
-  (info (format "%s %s leaving"  (.data c "ip") (.data c "username")))
-  (send-all {:action "LEAVE"
-             :username (.data c "username")})
-  (swap! conn #(disj % c)))
+(defn on-close [^WebSocketConnection cobj]
+  (let [m (get @conn-table cobj)] ;; obj already exists and has data
+    (info (format "%s %s leaving"  (:ip m) (:username m)))
+    (send-all {:action :LEAVE
+               :username (:username m)})
+    (swap! conn-table #(dissoc % cobj))))
 
 
 ;;; todo: could wrap this in a transaction maybe
 (defn usernames
   "get all the usernames as a set"
   []
-  (set (map #(.data % "username") @conn)))
+  (set (map :username (vals @conn-table))))
 
 
-(defn gen-unique [coll name & num]
+(defn gen-unique [name coll & num]
   "generates a name unique to the collection supplied"
   (let [num-unsequed  (if (seq? num) (first num) num)
         num-seeded (or num 0)
@@ -49,18 +51,6 @@
     (if (contains? coll name-combined)
       (recur coll name (inc num-seeded))
       name-combined)))
-
-
-(defn say-or-spray [ m c]
-  (send-all (assoc m :username (.data c "username"))))
-
-
-
-
-(defn userlist [m c]
-  (.send c (encode
-            {:action "USERLIST"
-             :userlist (usernames)})))
 
 
 (defn constrain-username
@@ -72,42 +62,65 @@
 
 
 
-(defn login [m c]
-  (.data c "username"
-         (gen-unique (usernames) (constrain-username (m "loginUsername"))))
-  (userlist m c)
-  (send-all {:action "JOIN"
-             :username (.data c "username")}))
+(defn forward-all
+  [msg _ cmap]
+  (send-all (assoc msg :username (:username cmap))))
+
+(defmulti send-multi
+  (fn [msg cobj cmap]
+    (-> msg :action keyword)))
 
 
-(defn dispatch [m c action]
-  (cond
-   (contains? #{"SAY" "SPRAY"} action) say-or-spray
-   (= action "LOGIN") login
-   (= action "USERLIST") userlist))
+;;; can't user heirarchies here, because the conversion to keywords is not ns-qualified
+(defmethod send-multi :SAY
+  [msg _ cmap]
+  (forward-all msg nil cmap))
 
-     
+;;; can't user heirarchies here, because the conversion to keywords is not ns-qualified
+(defmethod send-multi :SPRAY
+  [msg _ cmap]
+  (forward-all msg nil cmap))
+
+(defmethod send-multi :USERLIST
+  [_ cobj _]
+  (wsr/sendm cobj {:action :USERLIST
+                   :userlist (usernames)}))
 
 
-;; TODO: catch json exception and send a response intelligently
-(defn on-message [c j]
+(defmethod send-multi :LOGIN
+  [m cobj cmap]
+  (let [username (-> m
+                     :loginUsername
+                     constrain-username 
+                     (gen-unique (usernames)))]
+    (swap! conn-table #(assoc-in % [cobj :username] username))
+    (send-multi {:action :USERLIST} cobj cmap)
+    (send-all {:action :JOIN
+               :username username})))
+
+
+
+
+
+
+(defn on-message [^WebSocketConnection cobj m]
   ;;(reset! res j) ;; debug only
-  (info (format "%s %s %s" (.data c "ip") (.data c "username") j))
-  (let [m (decode j)
-        action (m "action")
-        f (dispatch m c action)]
-    (f m c)))
+  (let [cmap (get @conn-table cobj)]
+    (info (format "%s %s %s" (:ip cmap) (:username cmap) m))
+    (send-multi m cobj cmap)))
 
 
 
 
-(def csrv (WebServers/createWebServer 9876))
-
-(.add csrv "/chatsocket"
-      (proxy [WebSocketHandler] []
-        (onOpen [c] (on-open c))
-        (onClose [c] (on-close c))
-        (onMessage [c j] (on-message c j))))
+(defn start-server [srv]
+  (.add srv "/chatsocket"
+        (proxy [WebSocketHandler] []
+          ;; creating the wrapped object only in open. beyond that we have it already.
+          (onOpen [^WebSocketConnection c] (on-open c))
+          (onClose [^WebSocketConnection c] (on-close c))
+          ;; TODO: catch json exception and send a response intelligently. maybe even remove user!
+          (onMessage [^WebSocketConnection c j] (on-message c (wsr/decode j)))))
+  (.start srv))
 
 
 
@@ -116,4 +129,8 @@
 
 
 (defn -main [& m]
-  (.start csrv))
+  (let [port (get env/env :port 9876)]
+    (info "starting server on " port)
+    (reset! csrv (WebServers/createWebServer port))
+    (start-server @csrv)
+    (println "server started on port " port)))

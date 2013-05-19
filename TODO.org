@@ -1,5 +1,10 @@
 TODO for the clojure webbit chat server
 
-* TODO play with transactions/refs for things like the username login stuff
-* TODO catch json errors in on-message, and report them
-* TODO try an aleph version?
+* before deployment
+** TODO keep a circbuf of 20 messages, and serve it upon login.
+** TODO rate-limit messages to some sane value
+** TODO logging clown shoes. get netty errors to show up in log4j
+* not urgent
+** play with transactions/refs for things like the username login stuff
+** catch json errors in on-message, and report them
+** try an aleph version?
