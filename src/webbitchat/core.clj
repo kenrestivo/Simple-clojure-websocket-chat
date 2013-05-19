@@ -99,8 +99,10 @@
                :username username})))
 
 
-
-
+(defmethod send-multi :default
+  [m cobj cmap]
+  (wsr/sendm cobj {:action :ERROR
+                   :message (str "There is no such action as " (:action m))}))
 
 
 (defn on-message [^WebSocketConnection cobj m]
