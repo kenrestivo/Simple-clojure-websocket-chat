@@ -29,3 +29,6 @@ send({action: "SAY", message: "This is a test message"});
 // clients can send any json-ish data not just messages
 send({action: "SPRAY", data: {foo: "bar", baz: 1, y:2}});
 
+// logging out
+send({action: "LOGOUT"})
+

@@ -2,6 +2,7 @@
   (:use [clojure.tools.logging :only (info error)])
   (:require [clojure.string :as string]
             [environ.core :as env]
+            [amalloy.ring-buffer :as rb]
             [webbitchat.websocketwrap :as wsr])
   (:import [org.webbitserver WebServer WebServers WebSocketHandler WebSocketConnection]
            )
@@ -15,9 +16,15 @@
 
 (defonce csrv (atom nil))
 
+(defonce backlog (atom (rb/ring-buffer 10)))
+
+(defn log [m]
+  (swap! backlog (partial cons m)))
+
 (defn send-all [m]
   (doseq [c (keys @conn-table)]
-    (wsr/sendm c m)))
+    (wsr/sendm c m))
+  (log m))
 
 
 
@@ -29,10 +36,11 @@
 
 
 (defn on-close [^WebSocketConnection cobj]
-  (let [{:keys [username ip] :as m} (get @conn-table cobj)] ;; obj already exists and has data
+  (let [{:keys [username ip] :as m} (get @conn-table cobj) ;; obj already exists and has data
+        m {:action :LEAVE
+           :username username}] 
     (info (format "%s %s leaving"  ip username))
-    (send-all {:action :LEAVE
-               :username username})
+    (send-all m )
     (swap! conn-table #(dissoc % cobj))))
 
 
@@ -95,6 +103,8 @@
                      (gen-unique (usernames)))]
     (swap! conn-table #(assoc-in % [cobj :username] username))
     (send-multi {:action :USERLIST} cobj cmap)
+    (doseq [m (reverse @backlog)]
+      (wsr/sendm cobj m))
     (send-all {:action :JOIN
                :username username})))
 

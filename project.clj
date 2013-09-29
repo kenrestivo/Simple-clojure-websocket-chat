@@ -4,6 +4,7 @@
                  [org.webbitserver/webbit "0.4.15"]
                  [cheshire "5.1.1"]
                  [environ "0.3.0"]
+                 [amalloy/ring-buffer "1.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [log4j "1.2.16"]]
   :aot [webbitchat.core]
