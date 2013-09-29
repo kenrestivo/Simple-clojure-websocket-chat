@@ -103,9 +103,9 @@
                      constrain-username 
                      (gen-unique (usernames)))]
     (swap! conn-table #(assoc-in % [cobj :username] username))
-    (send-multi {:action :USERLIST} cobj cmap)
     (doseq [m  @backlog]
       (wsr/sendm cobj m))
+    (send-multi {:action :USERLIST} cobj cmap)
     (send-all {:action :JOIN
                :username username})))
 
