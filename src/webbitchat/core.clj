@@ -11,15 +11,16 @@
 
 ;; TODO: extend-protocol c to the assoc protocol
 
+(def ring-size 10)
 
 (defonce conn-table (atom {}))
 
 (defonce csrv (atom nil))
 
-(defonce backlog (atom (rb/ring-buffer 10)))
+(defonce backlog (atom (rb/ring-buffer ring-size)))
 
 (defn log [m]
-  (swap! backlog (partial cons m)))
+  (swap! backlog #(into (rb/ring-buffer ring-size) (conj % m))))
 
 (defn send-all [m]
   (doseq [c (keys @conn-table)]
@@ -103,7 +104,7 @@
                      (gen-unique (usernames)))]
     (swap! conn-table #(assoc-in % [cobj :username] username))
     (send-multi {:action :USERLIST} cobj cmap)
-    (doseq [m (reverse @backlog)]
+    (doseq [m  @backlog]
       (wsr/sendm cobj m))
     (send-all {:action :JOIN
                :username username})))
