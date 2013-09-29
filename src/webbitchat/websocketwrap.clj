@@ -5,10 +5,7 @@
             ))
 
 (defn decode [j]
-  (-> j
-   json/decode
-   walk/keywordize-keys))
-
+  (json/decode j true))
 
 
 

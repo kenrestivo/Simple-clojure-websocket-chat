@@ -29,10 +29,10 @@
 
 
 (defn on-close [^WebSocketConnection cobj]
-  (let [m (get @conn-table cobj)] ;; obj already exists and has data
-    (info (format "%s %s leaving"  (:ip m) (:username m)))
+  (let [{:keys [username ip] :as m} (get @conn-table cobj)] ;; obj already exists and has data
+    (info (format "%s %s leaving"  ip username))
     (send-all {:action :LEAVE
-               :username (:username m)})
+               :username username})
     (swap! conn-table #(dissoc % cobj))))
 
 
@@ -63,8 +63,8 @@
 
 
 (defn forward-all
-  [msg _ cmap]
-  (send-all (assoc msg :username (:username cmap))))
+  [msg _ {:keys [username] :as cmap}]
+  (send-all (assoc msg :username username)))
 
 (defmulti send-multi
   (fn [msg cobj cmap]
@@ -107,8 +107,8 @@
 
 (defn on-message [^WebSocketConnection cobj m]
   ;;(reset! res j) ;; debug only
-  (let [cmap (get @conn-table cobj)]
-    (info (format "%s %s %s" (:ip cmap) (:username cmap) m))
+  (let [{:keys [ip username] :as cmap} (get @conn-table cobj)]
+    (info (format "%s %s %s" ip username m))
     (send-multi m cobj cmap)))
 
 
