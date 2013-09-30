@@ -1,7 +1,7 @@
 TODO for the clojure webbit chat server
 
 * before deployment
-** TODO keep a circbuf of 20 messages, and serve it upon login.
+** DONE keep a circbuf of 20 messages, and serve it upon login.
 ** TODO rate-limit messages to some sane value
 ** TODO logging clown shoes. get netty errors to show up in log4j
 * not urgent

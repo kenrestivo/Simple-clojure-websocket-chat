@@ -2,7 +2,7 @@
 
 Simple chatroom demo, written in Clojure, using webbit.
 
-I'm new to Clojure; this was just an experiment. I used it as a back-end for another experiment.
+This was just an experiment. I used it as a back-end for another experiment. It's now in production on at least one website though.
 
 ## Usage
 
@@ -12,6 +12,6 @@ There's some Javascript boilerplate for exercising the server is in test/webbitt
 
 ## License
 
-Copyright (C) 2012 ken restivo
+Copyright (C) 2012-2013 ken restivo
 
 Distributed under the Eclipse Public License, the same as Clojure.
