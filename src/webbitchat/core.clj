@@ -11,7 +11,7 @@
 
 ;; TODO: extend-protocol c to the assoc protocol
 
-(def ring-size 10)
+(def ring-size  (get env/env :ring-size 10))
 
 (defonce conn-table (atom {}))
 
